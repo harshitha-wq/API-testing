@@ -4,7 +4,7 @@ import { loadSession } from '../session';
 test.describe('Folders', () => {
     test.describe.configure({ mode: 'serial' });
     const session = loadSession();
-    //Flows folder
+    // shared folder id across tests
     let folderId: string;
     test('Create a new folder', async ({ request }) => {
         const response = await request.post('folders', {
@@ -26,7 +26,7 @@ test.describe('Folders', () => {
     });
     test('List folders', async ({ request }) => {
         const response = await request.get('folders', {
-            params: { projectId: session.projectId, pieceName: '@docxster/piece-claude' },
+            params: { projectId: session.projectId },
             headers: {
                 Authorization: `Bearer ${session.token}`,
             },
@@ -51,7 +51,7 @@ test.describe('Folders', () => {
         const body = await response.json();
         expect.soft(body.displayName).toBe('Updated API Test Flow Folder');
         expect.soft(body.projectId).toBe(session.projectId);
-        folderId = body.id;
+        expect.soft(body.id).toBe(folderId);
     });
     test('Get a folder by id', async ({ request }) => {
         const response = await request.get(`folders/${folderId}`, {
@@ -66,7 +66,6 @@ test.describe('Folders', () => {
         expect.soft(body.projectId).toBe(session.projectId);
         expect.soft(typeof body.created).toBe('string');
         expect.soft(typeof body.updated).toBe('string');
-        folderId = body.id;
 
     });
 

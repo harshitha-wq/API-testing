@@ -26,7 +26,7 @@ test.describe('Schema Folders', () => {
     });
     test('List document schema folders', async ({ request }) => {
         const response = await request.get('document/schema-folders', {
-            params: { projectId: session.projectId, pieceName: '@docxster/piece-claude' },
+            params: { projectId: session.projectId },
             headers: {
                 Authorization: `Bearer ${session.token}`,
             },
@@ -75,7 +75,6 @@ test.describe('Schema Folders', () => {
         expect.soft(body.projectId).toBe(session.projectId);
         expect.soft(typeof body.created).toBe('string');
         expect.soft(typeof body.updated).toBe('string');
-        folderId = body.id;
 
     });
 
