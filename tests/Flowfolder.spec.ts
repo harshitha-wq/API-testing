@@ -5,6 +5,7 @@ test.describe('Folders', () => {
     test.describe.configure({ mode: 'serial' });
     const session = loadSession();
     // shared folder id across tests
+    
     let folderId: string;
     test('Create a new folder', async ({ request }) => {
         const response = await request.post('folders', {

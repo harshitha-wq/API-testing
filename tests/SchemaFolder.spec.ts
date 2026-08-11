@@ -4,6 +4,7 @@ import { loadSession } from '../session';
 test.describe('Schema Folders', () => {
     test.describe.configure({ mode: 'serial' });
     const session = loadSession();
+    
 
     let folderId: string;
     test('Create a new document schema folder', async ({ request }) => {
