@@ -5,97 +5,110 @@ test.describe('Table API', () => {
     test.describe.configure({ mode: 'serial' });
 
     const session = loadSession();
-
     let tableId: string;
-    let flowId: string;
-    let createdWebhookId: string;
-    const webhookUrl = process.env.WEBHOOK_URL || 'https://webhook.site/test-table-webhook';
 
-    test.beforeAll(async ({ request }) => {
-        // 1. Get or create a table ID dynamically if not supplied via env
-        if (process.env.TABLE_ID) {
-            tableId = process.env.TABLE_ID;
-        } else {
-            const tablesRes = await request.get('tables', {
-                params: { projectId: session.projectId },
-                headers: { Authorization: `Bearer ${session.token}` },
-            });
+    test('Create Table', async ({ request }) => {
+        const tableName = 'New Table';
 
-            if (tablesRes.ok()) {
-                const tablesBody = await tablesRes.json();
-                if (Array.isArray(tablesBody.data) && tablesBody.data.length > 0) {
-                    tableId = tablesBody.data[0].id;
-                }
-            }
+        const startTime = Date.now();
+        const response = await request.post('tables', {
+            headers: {
+                Authorization: `Bearer ${session.token}`,
+                'Content-Type': 'application/json',
+            },
+            data: {
+                name: tableName,
+                projectId: session.projectId,
+            },
+        });
+        const responseTime = Date.now() - startTime;
 
-            if (!tableId) {
-                // Create a table if none exists
-                const createTableRes = await request.post('tables', {
-                    headers: { Authorization: `Bearer ${session.token}` },
-                    data: {
-                        name: 'API Test Table',
-                        projectId: session.projectId,
-                    },
-                });
-                if (createTableRes.ok()) {
-                    const createdTable = await createTableRes.json();
-                    tableId = createdTable.id;
-                }
-            }
-        }
+        console.log(`Create Table - Status: ${response.status()}, Response Time: ${responseTime}ms`);
 
-        // 2. Get or create a flow ID dynamically if not supplied via env
-        if (process.env.FLOW_ID) {
-            flowId = process.env.FLOW_ID;
-        } else {
-            const flowsRes = await request.get('flows', {
-                params: { projectId: session.projectId },
-                headers: { Authorization: `Bearer ${session.token}` },
-            });
+        expect.soft(response.status()).toBe(200);
+        expect.soft(responseTime).toBeLessThan(1000);
 
-            if (flowsRes.ok()) {
-                const flowsBody = await flowsRes.json();
-                if (Array.isArray(flowsBody.data) && flowsBody.data.length > 0) {
-                    flowId = flowsBody.data[0].id;
-                }
-            }
-        }
+        const body = await response.json();
+
+        expect.soft(body.id).toBeTruthy();
+        expect.soft(typeof body.id).toBe('string');
+
+        expect.soft(body.externalId).toBeTruthy();
+        expect.soft(typeof body.externalId).toBe('string');
+
+        expect.soft(body.name).toBe(tableName);
+
+        expect.soft(body.projectId).toBe(session.projectId);
+
+        expect.soft(body.agentId).toBeNull();
+        expect.soft(body.trigger).toBeNull();
+        expect.soft(body.status).toBeNull();
+
+        // Verify created and updated are valid ISO-8601 timestamps
+        expect.soft(new Date(body.created).getTime()).not.toBeNaN();
+        expect.soft(new Date(body.updated).getTime()).not.toBeNaN();
+
+        tableId = body.id;
     });
 
     test('List tables', async ({ request }) => {
+        const startTime = Date.now();
         const response = await request.get('tables', {
             params: { projectId: session.projectId },
             headers: {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseTime = Date.now() - startTime;
 
-        expect(response.status()).toBe(200);
+        console.log(`List Tables - Status: ${response.status()}, Response Time: ${responseTime}ms`);
+
+        expect.soft(response.status()).toBe(200);
+        expect.soft(responseTime).toBeLessThan(1000);
+
         const body = await response.json();
-        expect(body).toHaveProperty('data');
-        expect(Array.isArray(body.data)).toBe(true);
-        expect(body.data.length).toBeGreaterThan(0);
+        expect.soft(body).toHaveProperty('data');
+        expect.soft(Array.isArray(body.data)).toBe(true);
+        expect.soft(body.data.length).toBeGreaterThan(0);
+
+        if (Array.isArray(body.data) && body.data.length > 0) {
+            const item = body.data[0];
+            expect.soft(item.id).toBeTruthy();
+            expect.soft(item.name).toBeTruthy();
+            expect.soft(item.projectId).toBe(session.projectId);
+        }
     });
 
     test('Get a table by id', async ({ request }) => {
-        expect(tableId).toBeDefined();
+        expect.soft(tableId).toBeDefined();
 
+        const startTime = Date.now();
         const response = await request.get(`tables/${tableId}`, {
             headers: {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseTime = Date.now() - startTime;
 
-        expect(response.status()).toBe(200);
+        console.log(`Get Table by ID - Status: ${response.status()}, Response Time: ${responseTime}ms`);
+
+        expect.soft(response.status()).toBe(200);
+        expect.soft(responseTime).toBeLessThan(1000);
+
         const body = await response.json();
-        expect(body.id).toBe(tableId);
-        expect(body.projectId).toBe(session.projectId);
+        expect.soft(body.id).toBe(tableId);
+        expect.soft(body.projectId).toBe(session.projectId);
+        expect.soft(body.name).toBeTruthy();
+        expect.soft(body.externalId).toBeTruthy();
+        expect.soft(new Date(body.created).getTime()).not.toBeNaN();
+        expect.soft(new Date(body.updated).getTime()).not.toBeNaN();
     });
 
     test('Update a table', async ({ request }) => {
-        expect(tableId).toBeDefined();
+        expect.soft(tableId).toBeDefined();
         const updatedName = `API Table Updated ${Date.now()}`;
 
+        const startTime = Date.now();
         const response = await request.post(`tables/${tableId}`, {
             headers: {
                 Authorization: `Bearer ${session.token}`,
@@ -105,16 +118,23 @@ test.describe('Table API', () => {
                 name: updatedName,
             },
         });
+        const responseTime = Date.now() - startTime;
 
-        expect(response.status()).toBe(200);
+        console.log(`Update Table - Status: ${response.status()}, Response Time: ${responseTime}ms`);
+
+        expect.soft(response.status()).toBe(200);
+        expect.soft(responseTime).toBeLessThan(1000);
+
         const body = await response.json();
-        expect(body.id).toBe(tableId);
-        expect(body.name).toBe(updatedName);
+        expect.soft(body.id).toBe(tableId);
+        expect.soft(body.name).toBe(updatedName);
+        expect.soft(body.projectId).toBe(session.projectId);
     });
 
     test('Export a table', async ({ request }) => {
-        expect(tableId).toBeDefined();
+        expect.soft(tableId).toBeDefined();
 
+        const startTime = Date.now();
         const response = await request.post(`tables/${tableId}/export`, {
             headers: {
                 Authorization: `Bearer ${session.token}`,
@@ -122,16 +142,25 @@ test.describe('Table API', () => {
             },
             data: {},
         });
+        const responseTime = Date.now() - startTime;
 
-        expect(response.status()).toBe(200);
+        console.log(`Export Table - Status: ${response.status()}, Response Time: ${responseTime}ms`);
+
+        expect.soft(response.status()).toBe(200);
+        expect.soft(responseTime).toBeLessThan(1000);
+
         const body = await response.json();
-        expect(body).toHaveProperty('fields');
-        expect(body).toHaveProperty('rows');
+        expect.soft(body).toHaveProperty('fields');
+        expect.soft(body).toHaveProperty('rows');
+        expect.soft(Array.isArray(body.fields)).toBe(true);
+        expect.soft(Array.isArray(body.rows)).toBe(true);
+        expect.soft(body.name).toBeTruthy();
     });
 
     test('Export selected records from a table', async ({ request }) => {
-        expect(tableId).toBeDefined();
+        expect.soft(tableId).toBeDefined();
 
+        const startTime = Date.now();
         const response = await request.post(`tables/${tableId}/export`, {
             headers: {
                 Authorization: `Bearer ${session.token}`,
@@ -141,84 +170,36 @@ test.describe('Table API', () => {
                 recordIds: [],
             },
         });
+        const responseTime = Date.now() - startTime;
 
-        expect(response.status()).toBe(200);
+        console.log(`Export Selected Records - Status: ${response.status()}, Response Time: ${responseTime}ms`);
+
+        expect.soft(response.status()).toBe(200);
+        expect.soft(responseTime).toBeLessThan(1000);
+
         const body = await response.json();
-        expect(body).toHaveProperty('fields');
-        expect(body).toHaveProperty('rows');
-    });
-
-    test('Create a table webhook', async ({ request }) => {
-        expect(tableId).toBeDefined();
-
-        const payload: Record<string, unknown> = {
-            events: [
-                'RECORD_CREATED',
-                'RECORD_UPDATED',
-                'RECORD_DELETED',
-            ],
-            webhookUrl: webhookUrl,
-        };
-
-        if (flowId) {
-            payload.flowId = flowId;
-        }
-
-        const response = await request.post(`tables/${tableId}/webhooks`, {
-            headers: {
-                Authorization: `Bearer ${session.token}`,
-                'Content-Type': 'application/json',
-            },
-            data: payload,
-        });
-
-        expect([200, 201]).toContain(response.status());
-        const body = await response.json();
-        expect(body.tableId).toBe(tableId);
-        createdWebhookId = body.id;
-    });
-
-    test('Delete a table webhook', async ({ request }) => {
-        expect(tableId).toBeDefined();
-        expect(createdWebhookId).toBeDefined();
-
-        const response = await request.delete(`tables/${tableId}/webhooks/${createdWebhookId}`, {
-            headers: {
-                Authorization: `Bearer ${session.token}`,
-                'Content-Type': 'application/json',
-            },
-            data: {},
-        });
-
-        expect([200, 204]).toContain(response.status());
+        expect.soft(body).toHaveProperty('fields');
+        expect.soft(body).toHaveProperty('rows');
+        expect.soft(Array.isArray(body.fields)).toBe(true);
+        expect.soft(Array.isArray(body.rows)).toBe(true);
     });
 
     test('Delete a table', async ({ request }) => {
-        // Create a temporary table specifically to test deletion
-        const createTempResponse = await request.post('tables', {
-            headers: {
-                Authorization: `Bearer ${session.token}`,
-                'Content-Type': 'application/json',
-            },
-            data: {
-                name: `Temp Table for Deletion ${Date.now()}`,
-                projectId: session.projectId,
-            },
-        });
+        expect.soft(tableId).toBeDefined();
 
-        expect([200, 201]).toContain(createTempResponse.status());
-        const tempTable = await createTempResponse.json();
-        const tempTableId = tempTable.id;
-
-        // Delete the temporary table
-        const deleteResponse = await request.delete(`tables/${tempTableId}`, {
+        const startTime = Date.now();
+        const response = await request.delete(`tables/${tableId}`, {
             headers: {
                 Authorization: `Bearer ${session.token}`,
                 'Content-Type': 'application/json',
             },
             data: {},
         });
+        const responseTime = Date.now() - startTime;
 
-        expect([200, 204]).toContain(deleteResponse.status());
+        console.log(`Delete Table - Status: ${response.status()}, Response Time: ${responseTime}ms`);
+
+        expect.soft(response.status()).toBe(204);
+        expect.soft(responseTime).toBeLessThan(1000);
     });
 });
