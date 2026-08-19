@@ -9,12 +9,16 @@ export type LoginRequestBody = {
 export type LoginResponse = {
   token: string;
   projectId: string;
+  platformId: string;
+  id: string;
   [key: string]: unknown;
 };
 
 export type Session = {
   token: string;
   projectId: string;
+  platformId: string;
+  userId: string;
 };
 
 const SIGN_IN_ENDPOINT = 'authentication/sign-in';
