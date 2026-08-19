@@ -2,6 +2,7 @@ import { request } from '@playwright/test';
 import { env } from './config';
 import { login } from './src/auth.api';
 import { saveSession } from './session';
+import { ensureHtsCodesFile } from './scripts/fetch-hts-codes';
 
 async function globalSetup(): Promise<void> {
   const context = await request.newContext({ baseURL: env.apiBaseUrl });
@@ -16,8 +17,10 @@ async function globalSetup(): Promise<void> {
     throw new Error('Login response did not contain a token.');
   }
 
-  saveSession({ token: body.token, projectId: body.projectId });
+  saveSession({ token: body.token, projectId: body.projectId, platformId: body.platformId, userId: body.id });
   await context.dispose();
+
+  await ensureHtsCodesFile();
 }
 
 export default globalSetup;

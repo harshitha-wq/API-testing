@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { loadSession } from '../session';
 
+const RESPONSE_TIME_LIMIT_MS = 1000;
+
 test.describe('mcp', () => {
     test.describe.configure({ mode: 'serial' });
 
@@ -11,6 +13,7 @@ test.describe('mcp', () => {
     test('Create a new MCP server', async ({ request }) => {
         const session = loadSession();
 
+        const responseStartTime = Date.now();
         const response = await request.post('mcp-servers', {
             data: {
                 name: 'Test MCP Server',
@@ -19,6 +22,8 @@ test.describe('mcp', () => {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(200);
         const body = await response.json();
@@ -33,12 +38,15 @@ test.describe('mcp', () => {
     test('List MCP servers', async ({ request }) => {
         const session = loadSession();
 
+        const responseStartTime = Date.now();
         const response = await request.get('mcp-servers', {
             params: { projectId: session.projectId },
             headers: {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(200);
         const body = await response.json();
@@ -51,11 +59,14 @@ test.describe('mcp', () => {
     test('Get an MCP server by ID', async ({ request }) => {
         const session = loadSession();
 
+        const responseStartTime = Date.now();
         const response = await request.get(`mcp-servers/${mcpServerId}`, {
             headers: {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(200);
         const body = await response.json();
@@ -75,6 +86,7 @@ test.describe('mcp', () => {
     test('Update an MCP server', async ({ request }) => {
         const session = loadSession();
 
+        const responseStartTime = Date.now();
         const response = await request.post(`mcp-servers/${mcpServerId}`, {
             data: {
                 name: 'Updated MCP Server',
@@ -95,6 +107,8 @@ test.describe('mcp', () => {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(200);
         const body = await response.json();
@@ -111,12 +125,15 @@ test.describe('mcp', () => {
     test('Rotate the MCP token', async ({ request }) => {
         const session = loadSession();
 
+        const responseStartTime = Date.now();
         const response = await request.post(`mcp-servers/${mcpServerId}/rotate`, {
             data: {},
             headers: {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(200);
         const body = await response.json();
@@ -132,12 +149,15 @@ test.describe('mcp', () => {
     test('Get MCP runs for a server', async ({ request }) => {
         const session = loadSession();
 
+        const responseStartTime = Date.now();
         const response = await request.get('mcp-runs', {
             params: { projectId: session.projectId, mcpId: mcpServerId },
             headers: {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(200);
         const body = await response.json();
@@ -150,12 +170,15 @@ test.describe('mcp', () => {
     test('Delete an MCP server by ID', async ({ request }) => {
         const session = loadSession();
 
+        const responseStartTime = Date.now();
         const response = await request.delete(`mcp-servers/${mcpServerId}`, {
             data: {},
             headers: {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(204);
     });

@@ -12,6 +12,5 @@ export default defineConfig({
     extraHTTPHeaders: {
       'Content-Type': 'application/json',
     },
-    trace: 'on',
   },
 });
