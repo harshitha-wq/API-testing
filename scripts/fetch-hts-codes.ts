@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as path from 'path';
 import { writeExcelSheet, readExcelSheet } from '../excel';
 
@@ -39,12 +40,12 @@ async function fetchReferenceCodes(): Promise<HtsCode[]> {
   return codes;
 }
 
-async function main() {
-  console.log('Fetching HTS codes from USITC...');
-  const codes = await fetchReferenceCodes();
-  console.log(`Fetched ${codes.length} codes.`);
+export const HTS_CODES_FILE = path.join(__dirname, '..', 'reports', 'hts-codes.xlsx');
 
-  const filePath = path.join(__dirname, '..', 'reports', 'hts-codes.xlsx');
+export async function ensureHtsCodesFile(filePath: string = HTS_CODES_FILE): Promise<void> {
+  if (fs.existsSync(filePath)) return;
+
+  const codes = await fetchReferenceCodes();
   await writeExcelSheet(
     filePath,
     'HTS Codes',
@@ -54,13 +55,31 @@ async function main() {
     ],
     codes,
   );
-  console.log(`Wrote ${codes.length} codes to ${filePath}`);
+}
 
-  const readBack = await readExcelSheet(filePath, 'HTS Codes');
+async function main() {
+  console.log('Fetching HTS codes from USITC...');
+  const codes = await fetchReferenceCodes();
+  console.log(`Fetched ${codes.length} codes.`);
+
+  await writeExcelSheet(
+    HTS_CODES_FILE,
+    'HTS Codes',
+    [
+      { header: 'HTS Code', key: 'htsCode', width: 16 },
+      { header: 'Description', key: 'description', width: 60 },
+    ],
+    codes,
+  );
+  console.log(`Wrote ${codes.length} codes to ${HTS_CODES_FILE}`);
+
+  const readBack = await readExcelSheet(HTS_CODES_FILE, 'HTS Codes');
   console.log(`Read back ${readBack.length} rows. First row:`, readBack[0]);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

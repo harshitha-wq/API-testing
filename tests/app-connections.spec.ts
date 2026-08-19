@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { loadSession } from '../session';
 
+const RESPONSE_TIME_LIMIT_MS = 1000;
+
 test.describe('app-connections', () => {
     test.describe.configure({ mode: 'serial' });
 
@@ -12,6 +14,7 @@ test.describe('app-connections', () => {
         const session = loadSession();
         const externalId = `test-connection-${Date.now()}`;
 
+        const responseStartTime = Date.now();
         const response = await request.post('app-connections', {
             data: {
                 externalId,
@@ -26,6 +29,8 @@ test.describe('app-connections', () => {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(201);
         const body = await response.json();
@@ -44,6 +49,7 @@ test.describe('app-connections', () => {
     test('Update an app connection', async ({ request }) => {
         const session = loadSession();
 
+        const responseStartTime = Date.now();
         const response = await request.post(`app-connections/${connectionId}`, {
             data: {
                 displayName: 'Updated Test Connection',
@@ -53,6 +59,8 @@ test.describe('app-connections', () => {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(200);
         const body = await response.json();
@@ -65,12 +73,15 @@ test.describe('app-connections', () => {
     test('List app connection owners', async ({ request }) => {
         const session = loadSession();
 
+        const responseStartTime = Date.now();
         const response = await request.get('app-connections/owners', {
             params: { projectId: session.projectId },
             headers: {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(200);
         const body = await response.json();
@@ -87,12 +98,15 @@ test.describe('app-connections', () => {
     test('List app connections', async ({ request }) => {
         const session = loadSession();
 
+        const responseStartTime = Date.now();
         const response = await request.get('app-connections', {
             params: { projectId: session.projectId, pieceName: '@docxster/piece-claude' },
             headers: {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(200);
         const body = await response.json();
@@ -129,6 +143,7 @@ test.describe('app-connections', () => {
         const sourceId = await createConnection('source');
         const targetId = await createConnection('target');
 
+        const responseStartTime = Date.now();
         const response = await request.post('app-connections/replace', {
             data: {
                 sourceAppConnectionId: sourceId,
@@ -137,13 +152,18 @@ test.describe('app-connections', () => {
             },
             headers: { Authorization: `Bearer ${session.token}` },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(204);
 
+        const listResponseStartTime = Date.now();
         const listResponse = await request.get('app-connections', {
             params: { projectId: session.projectId, pieceName: '@docxster/piece-claude' },
             headers: { Authorization: `Bearer ${session.token}` },
         });
+        const listResponseDurationMs = Date.now() - listResponseStartTime;
+        expect.soft(listResponseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
         const listBody = await listResponse.json();
         // The source connection is deleted as part of the replace; the target survives.
         expect.soft(listBody.data.some((c: { id: string }) => c.id === sourceId)).toBe(false);
@@ -159,12 +179,15 @@ test.describe('app-connections', () => {
     test('Delete the app connection', async ({ request }) => {
         const session = loadSession();
 
+        const responseStartTime = Date.now();
         const response = await request.delete(`app-connections/${connectionId}`, {
             data: {},
             headers: {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(204);
     });

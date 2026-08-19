@@ -1,22 +1,27 @@
 import { test, expect } from '@playwright/test';
 import { loadSession } from '../session';
 
+const RESPONSE_TIME_LIMIT_MS = 1000;
+
 test.describe('Platform and Flows', () => {
     test.describe.configure({ mode: 'serial' });
     const session = loadSession();
 
     //  Retrieve platform information after login and validate user platform configuration.
     test('Get Platform Details', async ({ request }) => {
+        const responseStartTime = Date.now();
         const response = await request.get(`platforms/${session.platformId}`, {
             headers: {
                 Accept: 'application/json',
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(200);
         const body = await response.json();
-
+        expect(body.id).toBeTruthy();
         expect.soft(body.id).toBe(session.platformId);
         expect.soft(typeof body.name).toBe('string');
         expect.soft(body.name).toBeTruthy();
@@ -27,12 +32,15 @@ test.describe('Platform and Flows', () => {
 
     //  Retrieve existing number of flows in the project/platform.
     test('Get Flow Count', async ({ request }) => {
+        const responseStartTime = Date.now();
         const response = await request.get('flows/count', {
             headers: {
                 Accept: 'application/json',
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(200);
         const body = await response.json();
@@ -43,6 +51,7 @@ test.describe('Platform and Flows', () => {
 
     // Retrieve all flows available under a project to view existing flow configurations.
     test('Get Flows', async ({ request }) => {
+        const responseStartTime = Date.now();
         const response = await request.get('flows', {
             params: {
                 projectId: session.projectId,
@@ -54,6 +63,8 @@ test.describe('Platform and Flows', () => {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(200);
         const body = await response.json();
@@ -61,12 +72,12 @@ test.describe('Platform and Flows', () => {
         expect.soft(Array.isArray(body.data)).toBe(true);
 
 
-            const flow = body.data[0];
-            expect.soft(typeof flow.id).toBe('string');
-            expect.soft(flow.projectId).toBe(session.projectId);
-            expect.soft(flow.version).toBeTruthy();
-            expect.soft(typeof flow.version.id).toBe('string');
-            expect.soft(flow.version.flowId).toBe(flow.id);
-            expect.soft(typeof flow.status).toBe('string');
+        const flow = body.data[0];
+        expect.soft(typeof flow.id).toBe('string');
+        expect.soft(flow.projectId).toBe(session.projectId);
+        expect.soft(flow.version).toBeTruthy();
+        expect.soft(typeof flow.version.id).toBe('string');
+        expect.soft(flow.version.flowId).toBe(flow.id);
+        expect.soft(typeof flow.status).toBe('string');
     });
 });

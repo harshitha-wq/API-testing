@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { loadSession } from '../session';
 
+const RESPONSE_TIME_LIMIT_MS = 1000;
+
 test.describe('Projects', () => {
     test.describe.configure({ mode: 'serial' });
 
@@ -8,6 +10,7 @@ test.describe('Projects', () => {
     let projectId: string;
 
     test('Create a new project', async ({ request }) => {
+        const responseStartTime = Date.now();
         const response = await request.post('projects', {
             data: {
                 displayName: 'API Test Project',
@@ -22,6 +25,8 @@ test.describe('Projects', () => {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(201);
 
@@ -87,6 +92,7 @@ test.describe('Projects', () => {
 
 
     test.skip('List projects', async ({ request }) => {
+        const responseStartTime = Date.now();
         const response = await request.get('projects', {
             params: {
                 externalId: 'api-test-project',
@@ -96,6 +102,8 @@ test.describe('Projects', () => {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect(response.status()).toBe(200);
 
@@ -121,6 +129,7 @@ test.describe('Projects', () => {
 
 
     test('Update an existing project', async ({ request }) => {
+        const responseStartTime = Date.now();
         const response = await request.post(`projects/${projectId}`, {
             data: {
                 notifyStatus: 'NEVER',
@@ -143,6 +152,8 @@ test.describe('Projects', () => {
                 Authorization: `Bearer ${session.token}`,
             },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         expect.soft(response.status()).toBe(200);
 
@@ -207,10 +218,13 @@ test.describe('Projects', () => {
     test('Delete a project', async ({ request }) => {
         console.log('Deleting projectId:', projectId);
 
+        const responseStartTime = Date.now();
         const response = await request.delete(`projects/${projectId}`, {
             data: {},
             headers: { Authorization: `Bearer ${session.token}`, },
         });
+        const responseDurationMs = Date.now() - responseStartTime;
+        expect.soft(responseDurationMs).toBeLessThan(RESPONSE_TIME_LIMIT_MS);
 
         console.log('Delete status:', response.status());
         console.log('Delete body:', await response.text());
@@ -219,4 +233,3 @@ test.describe('Projects', () => {
     });
 
 });
-
