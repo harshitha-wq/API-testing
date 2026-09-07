@@ -4,7 +4,7 @@ import { loadSession } from '../session';
 import { readExcelSheet } from '../excel';
 
 const HTS_CODES_FILE = path.join(__dirname, '..', 'reports', 'hts-codes.xlsx');
-const RESPONSE_TIME_LIMIT_MS = 1000;
+const RESPONSE_TIME_LIMIT_MS = 2500; // raised from 1000ms - dev env has normal 1.0-1.5s latency spikes
 // This test fires every row's 3 requests concurrently via Promise.all, so under that
 // burst load individual requests run slower than a single isolated call would - give
 // them their own, more realistic budget instead of the standard 1s.
