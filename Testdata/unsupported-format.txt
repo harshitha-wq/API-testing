@@ -1,0 +1,1 @@
+This is a plain text file, not a PDF or image, used to verify that Split Document and OCR rejects unsupported file formats.
