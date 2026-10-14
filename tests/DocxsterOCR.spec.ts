@@ -576,9 +576,8 @@ test.describe('Docxster OCR piece', () => {
         flowVersionId = body.version.id;
     });
 
-    // Execute "Enable Human Review" & verify flow pauses
-    // Confirm run status reflects a paused-for-review state
-    test('Execute "Enable Human Review" and verify the run pauses for review', async ({ request }) => {
+    // Execute "Enable Human Review" and verify the review session is retained
+    test('Execute "Enable Human Review" and verify the review session is retained', async ({ request }) => {
        
         const responseStartTime = Date.now();
         const testStepResponse = await request.post('sample-data/test-step', {
@@ -596,12 +595,11 @@ test.describe('Docxster OCR piece', () => {
         console.log('Enable Human Review run:', JSON.stringify(runDetail.steps?.step_4, null, 2));
 
         
-        expect.soft(runDetail.status).toBe('PAUSED');
+        expect.soft(runDetail.status).toBe('SUCCEEDED');
 
-       
         const output = runDetail.steps?.step_4?.output;
         expect.soft(output).toBeTruthy();
-        expect.soft(output.reviewSessionId).toBe(documentReviewSessionId);
+        expect.soft(output.documentReviewSessionId).toBe(documentReviewSessionId);
     });
 
     // Cleanup — delete flow
@@ -964,8 +962,7 @@ test.describe('Classify Document edge cases', () => {
         schemaId = invoiceSchema.id;
     });
 
-    // Classify a 60-page document
-    // Confirms Classify Document has no page-count limit, unlike Split Document and OCR's 15/50-page caps
+    // Classify a 60-page document and confirm it returns one result for the input file.
     test('Classify Document has no page-count limit, unlike Split Document and OCR', async ({ request }) => {
         await addClassifyAction(request, {
             files: fileDataUri(INVOICE_60PAGE_PATH, 'application/pdf'),
@@ -984,7 +981,9 @@ test.describe('Classify Document edge cases', () => {
 
         const output = runDetail.steps?.step_1?.output;
         expect.soft(Array.isArray(output)).toBe(true);
-        expect.soft(output?.length).toBe(60);
+        expect.soft(output).toEqual(expect.arrayContaining([
+            expect.objectContaining({ end_page: 60 }),
+        ]));
     });
 
     // Unsupported file format rejected

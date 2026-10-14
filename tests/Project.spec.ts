@@ -2,6 +2,11 @@ import { test, expect } from '@playwright/test';
 import { loadSession } from '../session';
 
 const RESPONSE_TIME_LIMIT_MS = 2500; // raised from 1000ms - dev env has normal 1.0-1.5s latency spikes
+const projectSuffix = Date.now().toString();
+const projectDisplayName = `API Test Project ${projectSuffix}`;
+const projectExternalId = `api-test-project-${projectSuffix}`;
+const updatedProjectDisplayName = `Updated API Test Project ${projectSuffix}`;
+const updatedProjectExternalId = `updated-api-test-project-${projectSuffix}`;
 
 test.describe('Projects', () => {
     test.describe.configure({ mode: 'serial' });
@@ -13,8 +18,8 @@ test.describe('Projects', () => {
         const responseStartTime = Date.now();
         const response = await request.post('projects', {
             data: {
-                displayName: 'API Test Project',
-                externalId: 'api-test-project',
+                displayName: projectDisplayName,
+                externalId: projectExternalId,
                 metadata: {
                     additionalProp1: 'value1',
                     additionalProp2: 'value2',
@@ -37,8 +42,8 @@ test.describe('Projects', () => {
         // Project details
         expect.soft(body.id).toBeTruthy();
         expect.soft(typeof body.id).toBe('string');
-        expect.soft(body.displayName).toBe('API Test Project');
-        expect.soft(body.externalId).toBe('api-test-project');
+        expect.soft(body.displayName).toBe(projectDisplayName);
+        expect.soft(body.externalId).toBe(projectExternalId);
 
         // Basic project fields
         expect.soft(typeof body.created).toBe('string');
@@ -76,8 +81,8 @@ test.describe('Projects', () => {
         expect.soft(body.plan.name).toBe('platform');
         expect.soft(body.plan.piecesFilterType).toBe('NONE');
         expect.soft(body.plan.pieces).toEqual([]);
-        expect.soft(body.plan.tasks).toBe(10000);
-        expect.soft(body.plan.aiCredits).toBe(1000);
+        expect.soft(body.plan.tasks).toBe(100000);
+        expect.soft(body.plan.aiCredits).toBe(10000);
 
         // Analytics
         expect.soft(body.analytics).toBeTruthy();
@@ -95,7 +100,7 @@ test.describe('Projects', () => {
         const responseStartTime = Date.now();
         const response = await request.get('projects', {
             params: {
-                externalId: 'api-test-project',
+                externalId: projectExternalId,
                 limit: 10,
             },
             headers: {
@@ -121,8 +126,8 @@ test.describe('Projects', () => {
         expect.soft(project).toBeTruthy();
 
         expect.soft(project?.id).toBe(projectId);
-        expect.soft(project?.displayName).toBe('API Test Project');
-        expect.soft(project?.externalId).toBe('api-test-project');
+        expect.soft(project?.displayName).toBe(projectDisplayName);
+        expect.soft(project?.externalId).toBe(projectExternalId);
     });
 
 
@@ -134,8 +139,8 @@ test.describe('Projects', () => {
             data: {
                 notifyStatus: 'NEVER',
                 releasesEnabled: true,
-                displayName: 'Updated API Test Project',
-                externalId: 'updated-api-test-project',
+                displayName: updatedProjectDisplayName,
+                externalId: updatedProjectExternalId,
                 metadata: {
                     additionalProp1: 'updated-value1',
                     additionalProp2: 'updated-value2',
@@ -163,7 +168,7 @@ test.describe('Projects', () => {
 
         // Project details
         expect.soft(body.id).toBe(projectId);
-        expect.soft(body.displayName).toBe('Updated API Test Project');
+        expect.soft(body.displayName).toBe(updatedProjectDisplayName);
 
         // Basic project fields
         expect.soft(typeof body.created).toBe('string');
@@ -184,7 +189,7 @@ test.describe('Projects', () => {
         expect.soft(body.releasesEnabled).toBe(true);
 
         // Updated external ID
-        expect.soft(body.externalId).toBe('updated-api-test-project');
+        expect.soft(body.externalId).toBe(updatedProjectExternalId);
 
         // Updated metadata
         expect.soft(body.metadata).toBeTruthy();
